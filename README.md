@@ -30,7 +30,7 @@ sudo apt install python3-tk python3-gi xdg-desktop-portal-gnome
 ```bash
 git clone https://github.com/Maihrendson/tapster.git
 cd tapster
-./tapster.py
+./bin/tapster
 ```
 
 ### Atalho no menu de aplicativos (opcional)
@@ -44,9 +44,9 @@ cat > ~/.local/share/applications/tapster.desktop <<EOF
 Type=Application
 Name=Tapster
 Comment=Autoclicker simples
-Exec="$PWD/tapster.py"
+Exec="$PWD/bin/tapster"
 Path=$PWD
-Icon=$PWD/tapster.svg
+Icon=$PWD/assets/tapster.svg
 Terminal=false
 Categories=Utility;
 StartupWMClass=Tapster
@@ -64,7 +64,7 @@ O Wayland não deixa um app comum ouvir teclas globalmente, então o atalho é c
 3. No comando, use o caminho completo do arquivo, seguido de `--toggle`. Se o caminho tiver espaços, coloque-o entre aspas:
 
 ```text
-/caminho/para/tapster/tapster.py --toggle
+/caminho/para/tapster/bin/tapster --toggle
 ```
 
 Enquanto o atalho existir, os outros aplicativos não recebem essa tecla. Você pode escolher outra tecla, mas os textos da janela continuam mencionando o F8.
@@ -81,9 +81,9 @@ O clique acontece onde o cursor estiver. Pelo F8, os cliques começam sem o atra
 ## Como funciona
 
 ```text
-F8 → atalho do GNOME → tapster.py --toggle → socket Unix → janela aberta
-                                                                   │
-                                     portal RemoteDesktop ← cliques ┘
+F8 → atalho do GNOME → bin/tapster --toggle → socket Unix → janela aberta
+                                                                    │
+                                      portal RemoteDesktop ← cliques ┘
 ```
 
 - **Cliques:** são enviados pelo portal RemoteDesktop (`xdg-desktop-portal`), que pede a autorização do usuário.
@@ -98,6 +98,30 @@ F8 → atalho do GNOME → tapster.py --toggle → socket Unix → janela aberta
 ## Privacidade
 
 O app não usa a rede. Depois da primeira autorização, guarda um token em `~/.config/tapster/restore_token` para evitar novos pedidos. Apague esse arquivo para esquecer a autorização.
+
+## Estrutura do projeto
+
+```text
+bin/tapster          abre o app sem exigir instalação
+assets/              ícone
+docs/                imagem do README
+tests/               um arquivo de teste por módulo
+tapster/
+├── cli.py           linha de comando e montagem do app
+├── settings.py      opções de clique e validação dos campos
+├── engine.py        repetição dos cliques em segundo plano
+├── portal.py        envio dos cliques pelo portal RemoteDesktop
+├── ipc.py           comandos entre processos e instância única
+├── paths.py         locais dos arquivos criados pelo app
+├── errors.py        erro compartilhado entre os módulos
+└── ui/
+    ├── app.py       estados e comportamento
+    ├── window.py    desenho da janela
+    ├── theme.py     cores e aparência de cada estado
+    └── state.py     estados possíveis do app
+```
+
+Só `portal.py` conhece o portal do sistema. Para outro método de envio de cliques, basta entregar ao `TapsterApp` um objeto com `connected`, `connect()` e `click(codigo_do_botao)`.
 
 ## Testes
 
